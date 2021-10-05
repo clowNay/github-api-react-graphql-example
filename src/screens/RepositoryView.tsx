@@ -12,12 +12,18 @@ interface RepositoryViewParams {
 
 export default function RepositoryView () {
     const { repositoryId, userId } = useParams<RepositoryViewParams>()
-    const [ getRepository, { loading, data } ] = useLazyQuery(GET_REPOSITORY);
+    const [ getRepository, { loading, data, refetch } ] = useLazyQuery(GET_REPOSITORY);
     const [ issueModalVisible, setIssueModalVisible ] = useState(false)
+
+    const handleIssueCreated = () => {
+        setIssueModalVisible(false)
+        if (refetch) refetch({ variables: { repositoryId, userId } })
+    }
 
     useEffect(() => {
         getRepository({ variables: { repositoryId, userId } })
     }, [getRepository, repositoryId, userId])
+
 
     if (loading || !data) return <p className="p-4 text-center text-gray-700">Reading repository...</p>
 
@@ -35,8 +41,9 @@ export default function RepositoryView () {
                 >
                     + Create New Issue
                 </button>
+
                 <CreateIssueDialog
-                    onIssueCreated={ () => getRepository({ variables: { repositoryId, userId } }) }
+                    onIssueCreated={ handleIssueCreated }
                     onClose={ () => setIssueModalVisible(false) }
                     repository={data.repository}
                     visible={issueModalVisible}
